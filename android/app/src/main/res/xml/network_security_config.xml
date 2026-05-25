@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Allow cleartext traffic for development (HTTP) -->
+    <!-- In production, remove this or restrict to specific domains -->
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    
+    <!-- For production, you can restrict cleartext to specific domains -->
+    <!--
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">your-dev-domain.com</domain>
+    </domain-config>
+    -->
+</network-security-config>
+
