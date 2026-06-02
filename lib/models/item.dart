@@ -10,6 +10,7 @@ class Item extends Equatable {
   final int? index;
   final String? name;
   final int qty;
+  final int? approvedQty;
   final String uom;
   final String? price;
   final String? tax;
@@ -27,6 +28,7 @@ class Item extends Equatable {
     this.index,
     this.name,
     required this.qty,
+    this.approvedQty,
     required this.uom,
     this.price,
     this.tax,
@@ -64,14 +66,15 @@ class Item extends Equatable {
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
       id: json['id']?.toString() ?? '',
-      createdAt: _parseDateTime(json['created_at']),
-      createdBy: json['created_by']?.toString(),
-      requisitionId: json['requisition_id']?.toString(),
-      orderId: json['order_id']?.toString(),
-      productId: json['product_id']?.toString() ?? '',
+      createdAt: _parseDateTime(json['createdAt']),
+      createdBy: json['createdBy']?.toString(),
+      requisitionId: json['requisitionId']?.toString(),
+      orderId: json['orderId']?.toString(),
+      productId: json['productId']?.toString() ?? '',
       index: _parseInt(json['index']),
       name: json['name']?.toString(),
       qty: _parseInt(json['qty']) ?? 0,
+      approvedQty: _parseInt(json['approvedQty']),
       uom: json['uom']?.toString() ?? '',
       price: json['price']?.toString(),
       tax: json['tax']?.toString(),
@@ -92,6 +95,7 @@ class Item extends Equatable {
       'index': index,
       'name': name,
       'qty': qty,
+      'approved_qty': approvedQty,
       'uom': uom,
       'price': price,
       'tax': tax,
@@ -103,21 +107,21 @@ class Item extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        createdAt,
-        createdBy,
-        requisitionId,
-        orderId,
-        productId,
-        index,
-        name,
-        qty,
-        uom,
-        price,
-        tax,
-        discount,
-        total,
-        remarks,
-      ];
+    id,
+    createdAt,
+    createdBy,
+    requisitionId,
+    orderId,
+    productId,
+    index,
+    name,
+    qty,
+    approvedQty,
+    uom,
+    price,
+    tax,
+    discount,
+    total,
+    remarks,
+  ];
 }
-

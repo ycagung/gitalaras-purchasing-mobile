@@ -276,6 +276,17 @@ class _PurchaseRequisitionDetailsPageState
                 ),
                 Expanded(
                   child: Text(
+                    'Approved Qty',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.mono100,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
                     'UOM',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
@@ -331,6 +342,16 @@ class _PurchaseRequisitionDetailsPageState
                     Expanded(
                       child: Text(
                         item.qty.toString(),
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: AppColors.mono100,
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        item.approvedQty?.toString() ?? '-',
                         textAlign: TextAlign.center,
                         style: GoogleFonts.inter(
                           fontSize: 12,
