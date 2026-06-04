@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gspro/bloc/order/order_event.dart';
 import 'package:gspro/bloc/order/order_state.dart';
+import 'package:gspro/models/attachment.dart';
 import 'package:gspro/repositories/order_repository.dart';
 
 class OrderBloc extends Bloc<OrderEvent, OrderState> {
@@ -39,9 +40,25 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
       orderNumber: event.orderNumber,
     );
 
-    result.fold(
-      (error) => emit(OrderError(message: error)),
-      (detailedOrder) => emit(OrderLoadedState(detailedOrder: detailedOrder)),
+    if (result.isLeft()) {
+      emit(OrderError(message: result.fold((l) => l, (r) => '')));
+      return;
+    }
+
+    final detailedOrder = result.fold((l) => null, (r) => r);
+    if (detailedOrder == null) return;
+
+    final attachmentResult = await _orderRepository.getOrderAttachments(
+      detailedOrder.header.id,
+    );
+
+    final attachments = attachmentResult.fold((l) => <Attachment>[], (r) => r);
+
+    emit(
+      OrderLoadedState(
+        detailedOrder: detailedOrder,
+        attachments: attachments,
+      ),
     );
   }
 
@@ -84,7 +101,18 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
       reloadResult.fold(
         (error) => emit(OrderError(message: error)),
-        (detailedOrder) => emit(OrderLoadedState(detailedOrder: detailedOrder)),
+        (detailedOrder) async {
+          final attachmentResult = await _orderRepository.getOrderAttachments(
+            detailedOrder.header.id,
+          );
+          final attachments = attachmentResult.fold((l) => <Attachment>[], (r) => r);
+          emit(
+            OrderLoadedState(
+              detailedOrder: detailedOrder,
+              attachments: attachments,
+            ),
+          );
+        },
       );
     } else {
       emit(
@@ -133,7 +161,18 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
       reloadResult.fold(
         (error) => emit(OrderError(message: error)),
-        (detailedOrder) => emit(OrderLoadedState(detailedOrder: detailedOrder)),
+        (detailedOrder) async {
+          final attachmentResult = await _orderRepository.getOrderAttachments(
+            detailedOrder.header.id,
+          );
+          final attachments = attachmentResult.fold((l) => <Attachment>[], (r) => r);
+          emit(
+            OrderLoadedState(
+              detailedOrder: detailedOrder,
+              attachments: attachments,
+            ),
+          );
+        },
       );
     } else {
       emit(

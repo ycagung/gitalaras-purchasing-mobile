@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:gspro/models/attachment.dart';
 import 'package:gspro/models/detailed_order.dart';
 import 'package:gspro/models/order.dart';
 
@@ -28,11 +29,15 @@ class OrdersLoadedState extends OrderState {
 
 class OrderLoadedState extends OrderState {
   final DetailedOrder detailedOrder;
+  final List<Attachment> attachments;
 
-  const OrderLoadedState({required this.detailedOrder});
+  const OrderLoadedState({
+    required this.detailedOrder,
+    this.attachments = const [],
+  });
 
   @override
-  List<Object?> get props => [detailedOrder];
+  List<Object?> get props => [detailedOrder, attachments];
 }
 
 class OrderError extends OrderState {

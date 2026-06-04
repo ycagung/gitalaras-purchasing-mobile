@@ -102,20 +102,20 @@ class Requisition extends Equatable {
   factory Requisition.fromJson(Map<String, dynamic> json) {
     return Requisition(
       id: json['id']?.toString() ?? '',
-      createdAt: _parseDateTime(json['created_at']),
-      createdBy: json['created_by']?.toString(),
+      createdAt: _parseDateTime(json['createdAt']),
+      createdBy: json['createdBy']?.toString(),
       number: json['number']?.toString() ?? '',
-      requesterId: json['requester_id']?.toString(),
-      requesterName: json['requester_name']?.toString(),
+      requesterId: json['requesterId']?.toString(),
+      requesterName: json['requesterName']?.toString(),
       requestDate: json['requestDate']?.toString() ?? '',
-      departmentId: json['department_id']?.toString(),
+      departmentId: json['departmentId']?.toString(),
       department: json['department']?.toString(),
       priority: json['priority']?.toString(),
       purpose: json['purpose']?.toString(),
-      projectNumber: json['project_number']?.toString(),
-      projectName: json['project_name']?.toString(),
-      deliveryPointId: _parseInt(json['delivery_point_id']),
-      requiredDate: json['required_date']?.toString(),
+      projectNumber: json['projectNumber']?.toString(),
+      projectName: json['projectName']?.toString(),
+      deliveryPointId: _parseInt(json['deliveryPointId']),
+      requiredDate: json['requiredDate']?.toString(),
       remarks: json['remarks']?.toString(),
       statusId:
           _parseInt(json['status']) ??
@@ -124,7 +124,7 @@ class Requisition extends Equatable {
           0,
       category: json['category']?.toString(),
       approved: _parseBool(json['approved'], defaultValue: false),
-      dueDate: json['due_date']?.toString(),
+      dueDate: json['dueDate']?.toString(),
       approvalCount:
           _parseInt(json['approvalCount']) ?? _parseInt(json['approval_count']),
       approvalScore:

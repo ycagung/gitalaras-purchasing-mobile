@@ -24,6 +24,7 @@ class ApproverInfo extends Equatable {
 class RequisitionApprover extends Equatable {
   final String id;
   final DateTime? createdAt;
+  final String requisitionNumber;
   final String requisitionId;
   final String approverId;
   final int score;
@@ -33,6 +34,7 @@ class RequisitionApprover extends Equatable {
   const RequisitionApprover({
     required this.id,
     this.createdAt,
+    required this.requisitionNumber,
     required this.requisitionId,
     required this.approverId,
     required this.score,
@@ -83,6 +85,10 @@ class RequisitionApprover extends Equatable {
     return RequisitionApprover(
       id: json['id']?.toString() ?? '',
       createdAt: _parseDateTime(json['created_at'] ?? json['createdAt']),
+      requisitionNumber:
+          json['requisition_number']?.toString() ??
+          json['requisitionNumber']?.toString() ??
+          '',
       requisitionId:
           json['requisition_id']?.toString() ??
           json['requisitionId']?.toString() ??
@@ -103,6 +109,7 @@ class RequisitionApprover extends Equatable {
     return {
       'id': id,
       'created_at': createdAt?.toIso8601String(),
+      'requisition_number': requisitionNumber,
       'requisition_id': requisitionId,
       'approver_id': approverId,
       'score': score,
@@ -115,6 +122,7 @@ class RequisitionApprover extends Equatable {
   List<Object?> get props => [
     id,
     createdAt,
+    requisitionNumber,
     requisitionId,
     approverId,
     score,

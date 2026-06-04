@@ -4,12 +4,15 @@ class Item extends Equatable {
   final String id;
   final DateTime? createdAt;
   final String? createdBy;
+  final String? requisitionNumber;
   final String? requisitionId;
   final String? orderId;
   final String productId;
   final int? index;
   final String? name;
   final int qty;
+  final int? approvedQty;
+  final int? orderedQty;
   final String uom;
   final String? price;
   final String? tax;
@@ -21,12 +24,15 @@ class Item extends Equatable {
     required this.id,
     this.createdAt,
     this.createdBy,
+    this.requisitionNumber,
     this.requisitionId,
     this.orderId,
     required this.productId,
     this.index,
     this.name,
     required this.qty,
+    this.approvedQty,
+    this.orderedQty,
     required this.uom,
     this.price,
     this.tax,
@@ -64,14 +70,17 @@ class Item extends Equatable {
   factory Item.fromJson(Map<String, dynamic> json) {
     return Item(
       id: json['id']?.toString() ?? '',
-      createdAt: _parseDateTime(json['created_at']),
-      createdBy: json['created_by']?.toString(),
-      requisitionId: json['requisition_id']?.toString(),
-      orderId: json['order_id']?.toString(),
-      productId: json['product_id']?.toString() ?? '',
+      createdAt: _parseDateTime(json['createdAt']),
+      createdBy: json['createdBy']?.toString(),
+      requisitionNumber: json['requisitionNumber']?.toString(),
+      requisitionId: json['requisitionId']?.toString(),
+      orderId: json['orderId']?.toString(),
+      productId: json['productId']?.toString() ?? '',
       index: _parseInt(json['index']),
       name: json['name']?.toString(),
       qty: _parseInt(json['qty']) ?? 0,
+      approvedQty: _parseInt(json['approvedQty']),
+      orderedQty: _parseInt(json['orderedQty'] ?? json['ordered_qty']),
       uom: json['uom']?.toString() ?? '',
       price: json['price']?.toString(),
       tax: json['tax']?.toString(),
@@ -86,12 +95,15 @@ class Item extends Equatable {
       'id': id,
       'created_at': createdAt?.toIso8601String(),
       'created_by': createdBy,
+      'requisition_number': requisitionNumber,
       'requisition_id': requisitionId,
       'order_id': orderId,
       'product_id': productId,
       'index': index,
       'name': name,
       'qty': qty,
+      'approved_qty': approvedQty,
+      'ordered_qty': orderedQty,
       'uom': uom,
       'price': price,
       'tax': tax,
@@ -103,21 +115,23 @@ class Item extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        createdAt,
-        createdBy,
-        requisitionId,
-        orderId,
-        productId,
-        index,
-        name,
-        qty,
-        uom,
-        price,
-        tax,
-        discount,
-        total,
-        remarks,
-      ];
+    id,
+    createdAt,
+    createdBy,
+    requisitionNumber,
+    requisitionId,
+    orderId,
+    productId,
+    index,
+    name,
+    qty,
+    approvedQty,
+    orderedQty,
+    uom,
+    price,
+    tax,
+    discount,
+    total,
+    remarks,
+  ];
 }
-
