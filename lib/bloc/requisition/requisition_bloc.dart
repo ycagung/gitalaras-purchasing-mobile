@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:gspro/bloc/requisition/requisition_event.dart';
 import 'package:gspro/bloc/requisition/requisition_state.dart';
+import 'package:gspro/models/attachment.dart';
 import 'package:gspro/repositories/requisition_repository.dart';
 
 class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
@@ -42,10 +43,27 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
       requisitionNumber: event.requisitionNumber,
     );
 
-    result.fold(
-      (error) => emit(RequisitionError(message: error)),
-      (detailedRequisition) => emit(
-        RequisitionLoadedState(detailedRequisition: detailedRequisition),
+    if (result.isLeft()) {
+      emit(RequisitionError(message: result.fold((l) => l, (r) => '')));
+      return;
+    }
+
+    final detailedRequisition = result.fold((l) => null, (r) => r);
+    if (detailedRequisition == null) return;
+
+    final attachmentResult = await _requisitionRepository.getRequisitionAttachments(
+      detailedRequisition.header.id,
+    );
+
+    final attachments = attachmentResult.fold(
+      (l) => <Attachment>[],
+      (r) => r,
+    );
+
+    emit(
+      RequisitionLoadedState(
+        detailedRequisition: detailedRequisition,
+        attachments: attachments,
       ),
     );
   }
@@ -94,9 +112,18 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
 
       reloadResult.fold(
         (error) => emit(RequisitionError(message: error)),
-        (detailedRequisition) => emit(
-          RequisitionLoadedState(detailedRequisition: detailedRequisition),
-        ),
+        (detailedRequisition) async {
+          final attachmentResult = await _requisitionRepository.getRequisitionAttachments(
+            detailedRequisition.header.id,
+          );
+          final attachments = attachmentResult.fold((l) => <Attachment>[], (r) => r);
+          emit(
+            RequisitionLoadedState(
+              detailedRequisition: detailedRequisition,
+              attachments: attachments,
+            ),
+          );
+        },
       );
     } else {
       // If we can't get the requisition number, emit error
@@ -151,9 +178,18 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
 
       reloadResult.fold(
         (error) => emit(RequisitionError(message: error)),
-        (detailedRequisition) => emit(
-          RequisitionLoadedState(detailedRequisition: detailedRequisition),
-        ),
+        (detailedRequisition) async {
+          final attachmentResult = await _requisitionRepository.getRequisitionAttachments(
+            detailedRequisition.header.id,
+          );
+          final attachments = attachmentResult.fold((l) => <Attachment>[], (r) => r);
+          emit(
+            RequisitionLoadedState(
+              detailedRequisition: detailedRequisition,
+              attachments: attachments,
+            ),
+          );
+        },
       );
     } else {
       // If we can't get the requisition number, emit error

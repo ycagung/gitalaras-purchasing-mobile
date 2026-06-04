@@ -4,6 +4,7 @@ class Order extends Equatable {
   final String id;
   final DateTime? createdAt;
   final String? createdBy;
+  final String? requisitionNumber;
   final String? requisitionId;
   final String number;
   final String issuerId;
@@ -20,6 +21,7 @@ class Order extends Equatable {
     required this.id,
     this.createdAt,
     this.createdBy,
+    this.requisitionNumber,
     this.requisitionId,
     required this.number,
     required this.issuerId,
@@ -40,6 +42,7 @@ class Order extends Equatable {
           ? DateTime.tryParse(json['createdAt'].toString())
           : null,
       createdBy: json['createdBy']?.toString(),
+      requisitionNumber: json['requisitionNumber']?.toString(),
       requisitionId: json['requisitionId']?.toString(),
       number: json['number']?.toString() ?? '',
       issuerId: json['issuerId']?.toString() ?? '',
@@ -63,6 +66,7 @@ class Order extends Equatable {
       'id': id,
       'created_at': createdAt?.toIso8601String(),
       'created_by': createdBy,
+      'requisition_number': requisitionNumber,
       'requisition_id': requisitionId,
       'number': number,
       'issuer_id': issuerId,
@@ -82,6 +86,7 @@ class Order extends Equatable {
     id,
     createdAt,
     createdBy,
+    requisitionNumber,
     requisitionId,
     number,
     issuerId,

@@ -1,4 +1,5 @@
 // Models barrel file for easy imports
+export 'attachment.dart';
 export 'department.dart';
 export 'item.dart';
 export 'order.dart';

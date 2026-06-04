@@ -4,6 +4,7 @@ class Item extends Equatable {
   final String id;
   final DateTime? createdAt;
   final String? createdBy;
+  final String? requisitionNumber;
   final String? requisitionId;
   final String? orderId;
   final String productId;
@@ -11,6 +12,7 @@ class Item extends Equatable {
   final String? name;
   final int qty;
   final int? approvedQty;
+  final int? orderedQty;
   final String uom;
   final String? price;
   final String? tax;
@@ -22,6 +24,7 @@ class Item extends Equatable {
     required this.id,
     this.createdAt,
     this.createdBy,
+    this.requisitionNumber,
     this.requisitionId,
     this.orderId,
     required this.productId,
@@ -29,6 +32,7 @@ class Item extends Equatable {
     this.name,
     required this.qty,
     this.approvedQty,
+    this.orderedQty,
     required this.uom,
     this.price,
     this.tax,
@@ -68,6 +72,7 @@ class Item extends Equatable {
       id: json['id']?.toString() ?? '',
       createdAt: _parseDateTime(json['createdAt']),
       createdBy: json['createdBy']?.toString(),
+      requisitionNumber: json['requisitionNumber']?.toString(),
       requisitionId: json['requisitionId']?.toString(),
       orderId: json['orderId']?.toString(),
       productId: json['productId']?.toString() ?? '',
@@ -75,6 +80,7 @@ class Item extends Equatable {
       name: json['name']?.toString(),
       qty: _parseInt(json['qty']) ?? 0,
       approvedQty: _parseInt(json['approvedQty']),
+      orderedQty: _parseInt(json['orderedQty'] ?? json['ordered_qty']),
       uom: json['uom']?.toString() ?? '',
       price: json['price']?.toString(),
       tax: json['tax']?.toString(),
@@ -89,6 +95,7 @@ class Item extends Equatable {
       'id': id,
       'created_at': createdAt?.toIso8601String(),
       'created_by': createdBy,
+      'requisition_number': requisitionNumber,
       'requisition_id': requisitionId,
       'order_id': orderId,
       'product_id': productId,
@@ -96,6 +103,7 @@ class Item extends Equatable {
       'name': name,
       'qty': qty,
       'approved_qty': approvedQty,
+      'ordered_qty': orderedQty,
       'uom': uom,
       'price': price,
       'tax': tax,
@@ -110,6 +118,7 @@ class Item extends Equatable {
     id,
     createdAt,
     createdBy,
+    requisitionNumber,
     requisitionId,
     orderId,
     productId,
@@ -117,6 +126,7 @@ class Item extends Equatable {
     name,
     qty,
     approvedQty,
+    orderedQty,
     uom,
     price,
     tax,

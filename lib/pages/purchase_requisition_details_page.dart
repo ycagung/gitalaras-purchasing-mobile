@@ -6,11 +6,14 @@ import 'package:gspro/bloc/auth/auth_state.dart';
 import 'package:gspro/bloc/requisition/requisition_bloc.dart';
 import 'package:gspro/bloc/requisition/requisition_event.dart';
 import 'package:gspro/bloc/requisition/requisition_state.dart';
+import 'package:gspro/models/attachment.dart';
 import 'package:gspro/models/detailed_requisition.dart';
 import 'package:gspro/models/item.dart';
 import 'package:gspro/models/requisition_approver.dart';
 import 'package:gspro/theme/app_colors.dart';
 import 'package:material_symbols_icons/symbols.dart';
+import 'package:file_saver/file_saver.dart';
+import 'package:http/http.dart' as http;
 
 class PurchaseRequisitionDetailsPage extends StatefulWidget {
   final String? requisitionNumber;
@@ -23,9 +26,7 @@ class PurchaseRequisitionDetailsPage extends StatefulWidget {
 }
 
 class _PurchaseRequisitionDetailsPageState
-    extends State<PurchaseRequisitionDetailsPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+    extends State<PurchaseRequisitionDetailsPage> {
 
   // Helper method to format date string to show only date without time
   String _formatDate(String? dateString) {
@@ -68,7 +69,6 @@ class _PurchaseRequisitionDetailsPageState
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
     if (widget.requisitionNumber != null) {
       context.read<RequisitionBloc>().add(
         RequisitionLoaded(requisitionNumber: widget.requisitionNumber!),
@@ -76,11 +76,7 @@ class _PurchaseRequisitionDetailsPageState
     }
   }
 
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+
 
   Widget _buildTopBar(String? prNumber) {
     return Container(
@@ -232,152 +228,6 @@ class _PurchaseRequisitionDetailsPageState
     );
   }
 
-  Widget _buildItemsTable(List<Item> items) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: AppColors.mono30),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: AppColors.alto,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(8),
-                topRight: Radius.circular(8),
-              ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Name',
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.mono100,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'Qty',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.mono100,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'Approved Qty',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.mono100,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: Text(
-                    'UOM',
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.mono100,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          // Rows
-          if (items.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text(
-                  'No items.',
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    color: AppColors.mono70,
-                  ),
-                ),
-              ),
-            )
-          else
-            ...List.generate(items.length, (index) {
-              final item = items[index];
-              return Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: index % 2 == 1 ? AppColors.pampas : Colors.white,
-                  border: Border(
-                    bottom: BorderSide(color: AppColors.mono30, width: 1),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        item.name ?? '-',
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.mono100,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        item.qty.toString(),
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.mono100,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        item.approvedQty?.toString() ?? '-',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.mono100,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        item.uom,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 12,
-                          color: AppColors.mono100,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -488,11 +338,14 @@ class _PurchaseRequisitionDetailsPageState
                             ),
                             const SizedBox(height: 24),
                             // Tabs
-                            Card(
-                              child: Column(
-                                children: [
-                                  TabBar(
-                                    controller: _tabController,
+                            DefaultTabController(
+                              length: 4,
+                              child: Card(
+                                child: Column(
+                                  children: [
+                                    TabBar(
+                                    isScrollable: true,
+                                    tabAlignment: TabAlignment.start,
                                     labelColor: AppColors.alizarinCrimson,
                                     unselectedLabelColor: AppColors.mono70,
                                     indicatorColor: AppColors.alizarinCrimson,
@@ -501,15 +354,15 @@ class _PurchaseRequisitionDetailsPageState
                                       Tab(text: 'Details'),
                                       Tab(text: 'Item Details'),
                                       Tab(text: 'History'),
+                                      Tab(text: 'Attachment'),
                                     ],
                                   ),
                                   SizedBox(
                                     height:
                                         MediaQuery.of(context).size.height *
                                         0.5,
-                                    child: TabBarView(
-                                      controller: _tabController,
-                                      children: [
+                                      child: TabBarView(
+                                        children: [
                                         // Details Tab
                                         SingleChildScrollView(
                                           padding: const EdgeInsets.all(24),
@@ -558,16 +411,19 @@ class _PurchaseRequisitionDetailsPageState
                                         // Item Details Tab
                                         SingleChildScrollView(
                                           padding: const EdgeInsets.all(24),
-                                          child: _buildItemsTable(data.items),
+                                          child: _buildItemsList(data.items),
                                         ),
                                         // History Tab
                                         _buildHistoryTab(data),
+                                        // Attachment Tab
+                                        _buildAttachmentTab(state.attachments),
                                       ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                          ),
                           ],
                         ),
                       ),
@@ -727,6 +583,240 @@ class _PurchaseRequisitionDetailsPageState
     final hour = localDate.hour.toString().padLeft(2, '0');
     final minute = localDate.minute.toString().padLeft(2, '0');
     return '$day $month $year $hour:$minute';
+  }
+
+  Widget _buildItemsList(List<Item> items) {
+    if (items.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(24),
+        child: Center(
+          child: Text(
+            'No items.',
+            style: GoogleFonts.inter(fontSize: 14, color: AppColors.mono70),
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: items.map((item) {
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: AppColors.mono30),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                item.name ?? '-',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.mono100,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Product ID: ${item.productId}',
+                style: GoogleFonts.inter(fontSize: 12, color: AppColors.mono70),
+              ),
+              const SizedBox(height: 12),
+              const Divider(height: 1),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _buildItemQuantity('Qty', item.qty.toString()),
+                  _buildItemQuantity(
+                    'Approved',
+                    item.approvedQty?.toString() ?? '-',
+                  ),
+                  _buildItemQuantity('Unit', item.uom),
+                ],
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildItemQuantity(String label, String value, [String? unit]) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.inter(
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            color: AppColors.mono60,
+          ),
+        ),
+        const SizedBox(height: 4),
+        RichText(
+          text: TextSpan(
+            text: value,
+            style: GoogleFonts.inter(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: AppColors.mono100,
+            ),
+            children: [
+              TextSpan(
+                text: unit != null ? ' $unit' : '',
+                style: GoogleFonts.inter(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.mono70,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAttachmentTab(List<Attachment> attachments) {
+    if (attachments.isEmpty) {
+      return Center(
+        child: Text(
+          'No attachments found.',
+          style: GoogleFonts.inter(
+            fontSize: 14,
+            color: AppColors.mono70,
+          ),
+        ),
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(24),
+      itemCount: attachments.length,
+      itemBuilder: (context, index) {
+        final doc = attachments[index];
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            border: Border.all(color: AppColors.mono30),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.pampas,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(
+                  Icons.insert_drive_file_outlined,
+                  color: AppColors.mono70,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doc.name,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.mono100,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatDate(doc.createdAt),
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: AppColors.mono70,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Symbols.download),
+                color: AppColors.alizarinCrimson,
+                onPressed: () async {
+                  if (doc.presignedUrl != null &&
+                      doc.presignedUrl!.isNotEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Downloading ${doc.name}...')),
+                    );
+                    try {
+                      final uri = Uri.parse(doc.presignedUrl!);
+                      final response = await http.get(uri);
+                      if (response.statusCode == 200) {
+                        final ext = doc.name.contains('.') ? doc.name.split('.').last : '';
+                        final nameWithoutExt = doc.name.contains('.')
+                            ? doc.name.substring(0, doc.name.lastIndexOf('.'))
+                            : doc.name;
+
+                        final savedPath = await FileSaver.instance.saveAs(
+                          name: nameWithoutExt,
+                          bytes: response.bodyBytes,
+                          ext: ext,
+                          mimeType: MimeType.other,
+                          customMimeType: doc.mimeType,
+                        );
+
+                        if (context.mounted) {
+                          if (savedPath != null && savedPath.isNotEmpty) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Download complete')),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Download cancelled')),
+                            );
+                          }
+                        }
+                      } else {
+                        throw Exception('Failed to download: HTTP ${response.statusCode}');
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('Error: $e'),
+                          ),
+                        );
+                      }
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'Download link not available for ${doc.name}',
+                        ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildHistoryTab(DetailedRequisition data) {
@@ -941,9 +1031,26 @@ class _PurchaseRequisitionDetailsPageState
                       child: Row(
                         children: [
                           Expanded(
-                            child: Text(
-                              item.name ?? '-',
-                              style: GoogleFonts.inter(fontSize: 14),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  item.name ?? '-',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.mono100,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Product ID: ${item.productId}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: AppColors.mono70,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(width: 8),
