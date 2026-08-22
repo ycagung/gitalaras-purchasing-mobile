@@ -1,3 +1,4 @@
+import 'package:dartz/dartz.dart' show Either;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -9,7 +10,10 @@ import 'package:gspro/bloc/requisition/requisition_state.dart';
 import 'package:gspro/models/attachment.dart';
 import 'package:gspro/models/detailed_requisition.dart';
 import 'package:gspro/models/item.dart';
+import 'package:gspro/models/project.dart';
 import 'package:gspro/models/requisition_approver.dart';
+import 'package:gspro/repositories/project_repository.dart';
+import 'package:gspro/services/api_service.dart';
 import 'package:gspro/theme/app_colors.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import 'package:file_saver/file_saver.dart';
@@ -27,6 +31,9 @@ class PurchaseRequisitionDetailsPage extends StatefulWidget {
 
 class _PurchaseRequisitionDetailsPageState
     extends State<PurchaseRequisitionDetailsPage> {
+  final ProjectRepository _projectRepository = ProjectRepository(
+    ApiService.instance,
+  );
 
   // Helper method to format date string to show only date without time
   String _formatDate(String? dateString) {
@@ -228,6 +235,50 @@ class _PurchaseRequisitionDetailsPageState
     );
   }
 
+  Widget _buildTappableDetailRow(
+    String label,
+    String value,
+    VoidCallback onTap,
+  ) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: AppColors.mono70,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.alizarinCrimson,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Icon(
+                Symbols.info,
+                size: 14,
+                color: AppColors.alizarinCrimson,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -380,6 +431,25 @@ class _PurchaseRequisitionDetailsPageState
                                                       header.department ?? '-',
                                                     ),
                                                     const SizedBox(height: 16),
+                                                    if (header.projectNumber !=
+                                                            null &&
+                                                        header
+                                                            .projectNumber!
+                                                            .isNotEmpty) ...[
+                                                      _buildTappableDetailRow(
+                                                        'Project Number',
+                                                        header.projectNumber!,
+                                                        () =>
+                                                            _showProjectDetailsDialog(
+                                                              context,
+                                                              header
+                                                                  .projectNumber!,
+                                                            ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 16,
+                                                      ),
+                                                    ],
                                                     _buildDetailRow(
                                                       'Project Name',
                                                       header.projectName ?? '-',
@@ -1119,6 +1189,116 @@ class _PurchaseRequisitionDetailsPageState
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  void _showProjectDetailsDialog(BuildContext context, String projectNumber) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dContext) {
+        return AlertDialog(
+          title: const Text('Project Details'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child: FutureBuilder<Either<String, ProjectDetail>>(
+              future: _projectRepository.getProjectByNumber(projectNumber),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 32),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final result = snapshot.data;
+                if (result == null || result.isLeft()) {
+                  final error = result?.fold((l) => l, (r) => '') ??
+                      'Failed to load project details';
+                  return Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    child: Text(
+                      error,
+                      style: GoogleFonts.inter(color: AppColors.red),
+                    ),
+                  );
+                }
+
+                final project = result.fold((l) => null, (r) => r)!;
+
+                return SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildDetailRow('Project Number', project.projectNumber),
+                      const SizedBox(height: 16),
+                      _buildDetailRow('Project Name', project.projectName),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Members',
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.mono70,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      if (project.members.isEmpty)
+                        Text(
+                          'No members assigned',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            color: AppColors.mono70,
+                          ),
+                        )
+                      else
+                        ...project.members.map(
+                          (member) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        member.user.name ?? member.user.email,
+                                        style: GoogleFonts.inter(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.mono100,
+                                        ),
+                                      ),
+                                      if (member.user.role != null)
+                                        Text(
+                                          member.user.role!.title,
+                                          style: GoogleFonts.inter(
+                                            fontSize: 12,
+                                            color: AppColors.mono70,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dContext).pop(),
+              child: const Text('Close'),
+            ),
+          ],
         );
       },
     );
