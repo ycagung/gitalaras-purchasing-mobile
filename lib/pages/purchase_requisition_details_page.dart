@@ -1076,10 +1076,17 @@ class _PurchaseRequisitionDetailsPageState
     String requisitionId,
     List<Item> items,
   ) {
+    // Each approver may only tighten the approved qty, never raise it above
+    // what the previous approver (or the original request, if no one has
+    // approved yet) allowed.
+    final maxQuantities = List<int>.generate(
+      items.length,
+      (i) => items[i].approvedQty ?? items[i].qty,
+    );
     // Local list to hold current qty values for each item
     final approvedQuantities = List<int>.generate(
       items.length,
-      (i) => items[i].qty,
+      (i) => maxQuantities[i],
     );
 
     showDialog(
@@ -1120,6 +1127,14 @@ class _PurchaseRequisitionDetailsPageState
                                     color: AppColors.mono70,
                                   ),
                                 ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Max: ${maxQuantities[index]}',
+                                  style: GoogleFonts.inter(
+                                    fontSize: 12,
+                                    color: AppColors.mono70,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -1130,15 +1145,23 @@ class _PurchaseRequisitionDetailsPageState
                               initialValue: approvedQuantities[index]
                                   .toString(),
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                contentPadding: EdgeInsets.symmetric(
+                              decoration: InputDecoration(
+                                border: const OutlineInputBorder(),
+                                contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12,
                                 ),
+                                errorText:
+                                    approvedQuantities[index] < 0 ||
+                                        approvedQuantities[index] >
+                                            maxQuantities[index]
+                                    ? 'Max ${maxQuantities[index]}'
+                                    : null,
                               ),
                               onChanged: (val) {
-                                approvedQuantities[index] =
-                                    int.tryParse(val) ?? 0;
+                                setState(() {
+                                  approvedQuantities[index] =
+                                      int.tryParse(val) ?? -1;
+                                });
                               },
                             ),
                           ),
@@ -1160,6 +1183,25 @@ class _PurchaseRequisitionDetailsPageState
                 ),
                 ElevatedButton(
                   onPressed: () {
+                    var badIndex = -1;
+                    for (int i = 0; i < approvedQuantities.length; i++) {
+                      if (approvedQuantities[i] < 0 ||
+                          approvedQuantities[i] > maxQuantities[i]) {
+                        badIndex = i;
+                        break;
+                      }
+                    }
+                    if (badIndex != -1) {
+                      ScaffoldMessenger.of(dContext).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Approved qty for ${items[badIndex].name} cannot exceed ${maxQuantities[badIndex]}',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
                     // Build the required list of maps
                     final itemsPayload = <Map<String, dynamic>>[];
                     for (int i = 0; i < items.length; i++) {
