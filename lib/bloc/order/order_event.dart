@@ -29,17 +29,27 @@ class OrderApproved extends OrderEvent {
   final String orderId;
   final List<Map<String, dynamic>> items;
 
-  const OrderApproved({required this.orderId, required this.items});
+  /// Base64-encoded PNG of the approver's drawn signature.
+  final String signature;
+
+  const OrderApproved({
+    required this.orderId,
+    required this.items,
+    required this.signature,
+  });
 
   @override
-  List<Object?> get props => [orderId, items];
+  List<Object?> get props => [orderId, items, signature];
 }
 
 class OrderRejected extends OrderEvent {
   final String orderId;
 
-  const OrderRejected({required this.orderId});
+  /// Base64-encoded PNG of the approver's drawn signature.
+  final String signature;
+
+  const OrderRejected({required this.orderId, required this.signature});
 
   @override
-  List<Object?> get props => [orderId];
+  List<Object?> get props => [orderId, signature];
 }
