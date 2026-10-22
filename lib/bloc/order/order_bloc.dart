@@ -14,6 +14,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     on<OrderLoaded>(_onOrderLoaded);
     on<OrderApproved>(_onOrderApproved);
     on<OrderRejected>(_onOrderRejected);
+    on<OrderChecked>(_onOrderChecked);
   }
 
   Future<void> _onOrdersLoaded(
@@ -183,5 +184,58 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
         ),
       );
     }
+  }
+
+  Future<void> _onOrderChecked(
+    OrderChecked event,
+    Emitter<OrderState> emit,
+  ) async {
+    String? orderNumber;
+    if (state is OrderLoadedState) {
+      orderNumber = (state as OrderLoadedState).detailedOrder.header.number;
+    }
+
+    emit(const OrderLoading());
+
+    final checkResult = await _orderRepository.checkOrder(
+      orderId: event.orderId,
+      signature: event.signature,
+    );
+    final error = checkResult.fold((l) => l, (r) => null);
+    if (error != null) {
+      emit(OrderError(message: error));
+      return;
+    }
+
+    if (orderNumber == null || orderNumber.isEmpty) {
+      emit(
+        const OrderError(
+          message: 'Could not reload order details after check',
+        ),
+      );
+      return;
+    }
+
+    final reloadResult = await _orderRepository.getDetailedOrder(
+      orderNumber: orderNumber,
+    );
+    await reloadResult.fold(
+      (error) async => emit(OrderError(message: error)),
+      (detailedOrder) async {
+        final attachmentResult = await _orderRepository.getOrderAttachments(
+          detailedOrder.header.id,
+        );
+        final attachments = attachmentResult.fold(
+          (l) => <Attachment>[],
+          (r) => r,
+        );
+        emit(
+          OrderLoadedState(
+            detailedOrder: detailedOrder,
+            attachments: attachments,
+          ),
+        );
+      },
+    );
   }
 }

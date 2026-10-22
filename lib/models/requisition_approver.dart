@@ -35,6 +35,12 @@ class RequisitionApprover extends Equatable {
   /// e-sign existed.
   final String? signaturePresignedUrl;
 
+  /// 'approve', 'reject' or 'check'. A check is a checker's sign-off and
+  /// adds no score.
+  final String? action;
+
+  bool get isCheck => action == 'check';
+
   const RequisitionApprover({
     required this.id,
     this.createdAt,
@@ -45,6 +51,7 @@ class RequisitionApprover extends Equatable {
     this.approved,
     this.approver,
     this.signaturePresignedUrl,
+    this.action,
   });
 
   // Helper method to safely parse DateTime from string
@@ -108,6 +115,7 @@ class RequisitionApprover extends Equatable {
           ? ApproverInfo.fromJson(json['approver'])
           : null,
       signaturePresignedUrl: json['signaturePresignedUrl']?.toString(),
+      action: json['action']?.toString(),
     );
   }
 
@@ -122,6 +130,7 @@ class RequisitionApprover extends Equatable {
       'approved': approved,
       'approver': approver?.toJson(),
       'signaturePresignedUrl': signaturePresignedUrl,
+      'action': action,
     };
   }
 
@@ -136,5 +145,6 @@ class RequisitionApprover extends Equatable {
     approved,
     approver,
     signaturePresignedUrl,
+    action,
   ];
 }

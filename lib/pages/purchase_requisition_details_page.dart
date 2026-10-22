@@ -317,11 +317,24 @@ class _PurchaseRequisitionDetailsPageState
               final currentUserId = authState is AuthAuthenticated
                   ? authState.userId
                   : null;
-              final userAlreadyApproved =
-                  currentUserId != null &&
-                  data.approvals.any((a) => a.approverId == currentUserId);
-              final showActionButtons =
-                  header.statusId == 1 && !userAlreadyApproved;
+              final approvalRole = authState is AuthAuthenticated
+                  ? authState.user.prApprovalRole
+                  : null;
+              final myApprovals = data.approvals
+                  .where((a) => a.approverId == currentUserId)
+                  .toList();
+              // Approvers approve/reject while the PR is pending; checkers
+              // check (adds no score) any time before it's rejected. Each
+              // only acts once.
+              final canApprove =
+                  approvalRole == 'approver' &&
+                  header.statusId == 1 &&
+                  !myApprovals.any((a) => !a.isCheck);
+              final canCheck =
+                  approvalRole == 'checker' &&
+                  header.statusId != 3 &&
+                  !myApprovals.any((a) => a.isCheck);
+              final showActionButtons = canApprove || canCheck;
 
               // Calculate total score and approved count from approvers list
               int totalScore = 0;
@@ -517,40 +530,64 @@ class _PurchaseRequisitionDetailsPageState
                       child: SafeArea(
                         child: Row(
                           children: [
-                            _buildActionButton(
-                              label: 'Reject',
-                              icon: Symbols.cancel,
-                              color: AppColors.red,
-                              onTap: () async {
-                                final bloc = context.read<RequisitionBloc>();
-                                final signature = await showSignatureDialog(
-                                  context,
-                                  title: 'Sign to reject',
-                                  confirmLabel: 'Reject',
-                                  confirmColor: AppColors.red,
-                                );
-                                if (signature == null) return;
-                                bloc.add(
-                                  RequisitionRejected(
-                                    requisitionId: header.id,
-                                    signature: signature,
-                                  ),
-                                );
-                              },
-                            ),
-                            const SizedBox(width: 16),
-                            _buildActionButton(
-                              label: 'Approve',
-                              icon: Symbols.check_circle,
-                              color: AppColors.green,
-                              onTap: () {
-                                _showApproveDialog(
-                                  context,
-                                  header.id,
-                                  data.items,
-                                );
-                              },
-                            ),
+                            if (canCheck)
+                              _buildActionButton(
+                                label: 'Check',
+                                icon: Symbols.verified,
+                                color: AppColors.infoBlue,
+                                onTap: () async {
+                                  final bloc = context.read<RequisitionBloc>();
+                                  final signature = await showSignatureDialog(
+                                    context,
+                                    title: 'Sign to check',
+                                    confirmLabel: 'Check',
+                                    confirmColor: AppColors.infoBlue,
+                                  );
+                                  if (signature == null) return;
+                                  bloc.add(
+                                    RequisitionChecked(
+                                      requisitionId: header.id,
+                                      signature: signature,
+                                    ),
+                                  );
+                                },
+                              ),
+                            if (canApprove) ...[
+                              _buildActionButton(
+                                label: 'Reject',
+                                icon: Symbols.cancel,
+                                color: AppColors.red,
+                                onTap: () async {
+                                  final bloc = context.read<RequisitionBloc>();
+                                  final signature = await showSignatureDialog(
+                                    context,
+                                    title: 'Sign to reject',
+                                    confirmLabel: 'Reject',
+                                    confirmColor: AppColors.red,
+                                  );
+                                  if (signature == null) return;
+                                  bloc.add(
+                                    RequisitionRejected(
+                                      requisitionId: header.id,
+                                      signature: signature,
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 16),
+                              _buildActionButton(
+                                label: 'Approve',
+                                icon: Symbols.check_circle,
+                                color: AppColors.green,
+                                onTap: () {
+                                  _showApproveDialog(
+                                    context,
+                                    header.id,
+                                    data.items,
+                                  );
+                                },
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -949,7 +986,9 @@ class _PurchaseRequisitionDetailsPageState
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'By: ${approval.approver?.name ?? approval.approver?.email ?? "-"} | Score: ${approval.score}',
+                            approval.isCheck
+                                ? 'Checked by: ${approval.approver?.name ?? approval.approver?.email ?? "-"}'
+                                : 'By: ${approval.approver?.name ?? approval.approver?.email ?? "-"} | Score: ${approval.score}',
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -1024,7 +1063,9 @@ class _PurchaseRequisitionDetailsPageState
   }
 
   Widget _buildApprovalIcon(RequisitionApprover approval) {
-    if (approval.approved == true) {
+    if (approval.isCheck) {
+      return const Icon(Symbols.verified, size: 16, color: AppColors.infoBlue);
+    } else if (approval.approved == true) {
       return const Icon(Symbols.check_circle, size: 16, color: AppColors.green);
     } else if (approval.approved == false) {
       return const Icon(Symbols.cancel, size: 16, color: AppColors.red);

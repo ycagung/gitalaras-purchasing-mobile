@@ -207,4 +207,22 @@ class RequisitionRepository {
       return Left(e.toString());
     }
   }
+
+  /// Records a checker's signed check. It adds no approval score.
+  Future<Either<String, Unit>> checkRequisition({
+    required String requisitionId,
+    required String signature,
+  }) async {
+    try {
+      await _apiService.post(
+        '/requisition/check',
+        body: {'requisitionId': requisitionId, 'signature': signature},
+      );
+      return const Right(unit);
+    } on ApiException catch (e) {
+      return Left(e.message);
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
 }

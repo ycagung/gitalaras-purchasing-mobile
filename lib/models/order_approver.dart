@@ -14,6 +14,12 @@ class OrderApprover extends Equatable {
   /// e-sign existed.
   final String? signaturePresignedUrl;
 
+  /// 'approve', 'reject' or 'check'. A check is a checker's sign-off and
+  /// adds no score.
+  final String? action;
+
+  bool get isCheck => action == 'check';
+
   const OrderApprover({
     required this.id,
     this.createdAt,
@@ -23,6 +29,7 @@ class OrderApprover extends Equatable {
     this.approved,
     this.approver,
     this.signaturePresignedUrl,
+    this.action,
   });
 
   static DateTime? _parseDateTime(dynamic value) {
@@ -77,6 +84,7 @@ class OrderApprover extends Equatable {
           ? ApproverInfo.fromJson(json['approver'])
           : null,
       signaturePresignedUrl: json['signaturePresignedUrl']?.toString(),
+      action: json['action']?.toString(),
     );
   }
 
@@ -90,6 +98,7 @@ class OrderApprover extends Equatable {
       'approved': approved,
       'approver': approver?.toJson(),
       'signaturePresignedUrl': signaturePresignedUrl,
+      'action': action,
     };
   }
 
@@ -103,5 +112,6 @@ class OrderApprover extends Equatable {
     approved,
     approver,
     signaturePresignedUrl,
+    action,
   ];
 }

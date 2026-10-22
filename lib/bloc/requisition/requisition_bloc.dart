@@ -14,6 +14,7 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
     on<RequisitionLoaded>(_onRequisitionLoaded);
     on<RequisitionApproved>(_onRequisitionApproved);
     on<RequisitionRejected>(_onRequisitionRejected);
+    on<RequisitionChecked>(_onRequisitionChecked);
   }
 
   Future<void> _onRequisitionsLoaded(
@@ -201,5 +202,58 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
         ),
       );
     }
+  }
+
+  Future<void> _onRequisitionChecked(
+    RequisitionChecked event,
+    Emitter<RequisitionState> emit,
+  ) async {
+    String? requisitionNumber;
+    if (state is RequisitionLoadedState) {
+      requisitionNumber = (state as RequisitionLoadedState).detailedRequisition.header.number;
+    }
+
+    emit(const RequisitionLoading());
+
+    final checkResult = await _requisitionRepository.checkRequisition(
+      requisitionId: event.requisitionId,
+      signature: event.signature,
+    );
+    final error = checkResult.fold((l) => l, (r) => null);
+    if (error != null) {
+      emit(RequisitionError(message: error));
+      return;
+    }
+
+    if (requisitionNumber == null || requisitionNumber.isEmpty) {
+      emit(
+        const RequisitionError(
+          message: 'Could not reload requisition details after check',
+        ),
+      );
+      return;
+    }
+
+    final reloadResult = await _requisitionRepository.getDetailedRequisition(
+      requisitionNumber: requisitionNumber,
+    );
+    await reloadResult.fold(
+      (error) async => emit(RequisitionError(message: error)),
+      (detailedRequisition) async {
+        final attachmentResult = await _requisitionRepository.getRequisitionAttachments(
+          detailedRequisition.header.id,
+        );
+        final attachments = attachmentResult.fold(
+          (l) => <Attachment>[],
+          (r) => r,
+        );
+        emit(
+          RequisitionLoadedState(
+            detailedRequisition: detailedRequisition,
+            attachments: attachments,
+          ),
+        );
+      },
+    );
   }
 }
