@@ -31,6 +31,10 @@ class RequisitionApprover extends Equatable {
   final bool? approved;
   final ApproverInfo? approver;
 
+  /// Short-lived URL of the drawn signature; null for approvals made before
+  /// e-sign existed.
+  final String? signaturePresignedUrl;
+
   const RequisitionApprover({
     required this.id,
     this.createdAt,
@@ -40,6 +44,7 @@ class RequisitionApprover extends Equatable {
     required this.score,
     this.approved,
     this.approver,
+    this.signaturePresignedUrl,
   });
 
   // Helper method to safely parse DateTime from string
@@ -102,6 +107,7 @@ class RequisitionApprover extends Equatable {
       approver: json['approver'] != null
           ? ApproverInfo.fromJson(json['approver'])
           : null,
+      signaturePresignedUrl: json['signaturePresignedUrl']?.toString(),
     );
   }
 
@@ -115,6 +121,7 @@ class RequisitionApprover extends Equatable {
       'score': score,
       'approved': approved,
       'approver': approver?.toJson(),
+      'signaturePresignedUrl': signaturePresignedUrl,
     };
   }
 
@@ -128,5 +135,6 @@ class RequisitionApprover extends Equatable {
     score,
     approved,
     approver,
+    signaturePresignedUrl,
   ];
 }

@@ -110,11 +110,16 @@ class RequisitionRepository {
   Future<Either<String, Requisition>> approveRequisition({
     required String requisitionId,
     required List<Map<String, dynamic>> items,
+    required String signature,
   }) async {
     try {
       final response = await _apiService.post(
         '/requisition/approve',
-        body: {'requisitionId': requisitionId, 'items': items},
+        body: {
+          'requisitionId': requisitionId,
+          'items': items,
+          'signature': signature,
+        },
       );
 
       // Handle both response formats: {status: 200, data: {...}} and {message: "...", data: {...}}
@@ -157,11 +162,12 @@ class RequisitionRepository {
 
   Future<Either<String, Requisition>> rejectRequisition({
     required String requisitionId,
+    required String signature,
   }) async {
     try {
       final response = await _apiService.post(
         '/requisition/reject',
-        body: {'requisitionId': requisitionId},
+        body: {'requisitionId': requisitionId, 'signature': signature},
       );
 
       // Handle both response formats: {status: 200, data: {...}} and {message: "...", data: {...}}

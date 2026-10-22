@@ -29,17 +29,30 @@ class RequisitionApproved extends RequisitionEvent {
   final String requisitionId;
   final List<Map<String, dynamic>> items;
 
-  const RequisitionApproved({required this.requisitionId, required this.items});
+  /// Base64-encoded PNG of the approver's drawn signature.
+  final String signature;
+
+  const RequisitionApproved({
+    required this.requisitionId,
+    required this.items,
+    required this.signature,
+  });
 
   @override
-  List<Object?> get props => [requisitionId, items];
+  List<Object?> get props => [requisitionId, items, signature];
 }
 
 class RequisitionRejected extends RequisitionEvent {
   final String requisitionId;
 
-  const RequisitionRejected({required this.requisitionId});
+  /// Base64-encoded PNG of the approver's drawn signature.
+  final String signature;
+
+  const RequisitionRejected({
+    required this.requisitionId,
+    required this.signature,
+  });
 
   @override
-  List<Object?> get props => [requisitionId];
+  List<Object?> get props => [requisitionId, signature];
 }

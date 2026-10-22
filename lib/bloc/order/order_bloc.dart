@@ -77,6 +77,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
     final approveResult = await _orderRepository.approveOrder(
       orderId: event.orderId,
       items: event.items,
+      signature: event.signature,
     );
 
     if (approveResult.isLeft()) {
@@ -137,6 +138,7 @@ class OrderBloc extends Bloc<OrderEvent, OrderState> {
 
     final rejectResult = await _orderRepository.rejectOrder(
       orderId: event.orderId,
+      signature: event.signature,
     );
 
     if (rejectResult.isLeft()) {

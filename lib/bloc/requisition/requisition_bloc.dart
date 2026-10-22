@@ -85,6 +85,7 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
     final approveResult = await _requisitionRepository.approveRequisition(
       requisitionId: event.requisitionId,
       items: event.items,
+      signature: event.signature,
     );
 
     // Handle the result - check if it's Left (error) or Right (success)
@@ -151,6 +152,7 @@ class RequisitionBloc extends Bloc<RequisitionEvent, RequisitionState> {
     // First reject the requisition
     final rejectResult = await _requisitionRepository.rejectRequisition(
       requisitionId: event.requisitionId,
+      signature: event.signature,
     );
 
     // Handle the result - check if it's Left (error) or Right (success)

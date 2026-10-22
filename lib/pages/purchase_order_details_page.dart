@@ -5,6 +5,9 @@ import 'package:gspro/bloc/auth/auth_bloc.dart';
 import 'package:gspro/bloc/auth/auth_state.dart';
 import 'package:gspro/bloc/order/order_bloc.dart';
 import 'package:gspro/models/attachment.dart';
+import 'package:gspro/utils/attachment_actions.dart';
+import 'package:gspro/widgets/signature_dialog.dart';
+import 'package:gspro/widgets/signature_thumbnail.dart';
 import 'package:gspro/bloc/auth/auth_state.dart';
 import 'package:gspro/bloc/order/order_bloc.dart';
 import 'package:gspro/bloc/order/order_event.dart';
@@ -14,8 +17,6 @@ import 'package:gspro/models/item.dart';
 import 'package:gspro/models/order_approver.dart';
 import 'package:gspro/theme/app_colors.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:file_saver/file_saver.dart';
-import 'package:http/http.dart' as http;
 
 class PurchaseOrderDetailsPage extends StatefulWidget {
   final String? orderNumber;
@@ -648,64 +649,16 @@ class _PurchaseOrderDetailsPageState extends State<PurchaseOrderDetailsPage> {
                 ),
               ),
               IconButton(
+                icon: const Icon(Symbols.visibility),
+                color: AppColors.alizarinCrimson,
+                tooltip: 'Preview',
+                onPressed: () => previewAttachment(context, doc),
+              ),
+              IconButton(
                 icon: const Icon(Symbols.download),
                 color: AppColors.alizarinCrimson,
-                onPressed: () async {
-                  if (doc.presignedUrl != null &&
-                      doc.presignedUrl!.isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Downloading ${doc.name}...')),
-                    );
-                    try {
-                      final uri = Uri.parse(doc.presignedUrl!);
-                      final response = await http.get(uri);
-                      if (response.statusCode == 200) {
-                        final ext = doc.name.contains('.') ? doc.name.split('.').last : '';
-                        final nameWithoutExt = doc.name.contains('.')
-                            ? doc.name.substring(0, doc.name.lastIndexOf('.'))
-                            : doc.name;
-
-                        final savedPath = await FileSaver.instance.saveAs(
-                          name: nameWithoutExt,
-                          bytes: response.bodyBytes,
-                          ext: ext,
-                          mimeType: MimeType.other,
-                          customMimeType: doc.mimeType,
-                        );
-
-                        if (context.mounted) {
-                          if (savedPath != null && savedPath.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Download complete')),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Download cancelled')),
-                            );
-                          }
-                        }
-                      } else {
-                        throw Exception('Failed to download: HTTP ${response.statusCode}');
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: $e'),
-                          ),
-                        );
-                      }
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Download link not available for ${doc.name}',
-                        ),
-                      ),
-                    );
-                  }
-                },
+                tooltip: 'Download',
+                onPressed: () => downloadAttachment(context, doc),
               ),
             ],
           ),
@@ -824,6 +777,12 @@ class _PurchaseOrderDetailsPageState extends State<PurchaseOrderDetailsPage> {
                               color: AppColors.mono70,
                             ),
                           ),
+                          if (approval.signaturePresignedUrl != null) ...[
+                            const SizedBox(height: 6),
+                            SignatureThumbnail(
+                              url: approval.signaturePresignedUrl!,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -1183,9 +1142,20 @@ class _PurchaseOrderDetailsPageState extends State<PurchaseOrderDetailsPage> {
                               label: 'Reject',
                               icon: Symbols.cancel,
                               color: AppColors.red,
-                              onTap: () {
-                                context.read<OrderBloc>().add(
-                                  OrderRejected(orderId: header.id),
+                              onTap: () async {
+                                final bloc = context.read<OrderBloc>();
+                                final signature = await showSignatureDialog(
+                                  context,
+                                  title: 'Sign to reject',
+                                  confirmLabel: 'Reject',
+                                  confirmColor: AppColors.red,
+                                );
+                                if (signature == null) return;
+                                bloc.add(
+                                  OrderRejected(
+                                    orderId: header.id,
+                                    signature: signature,
+                                  ),
                                 );
                               },
                             ),
@@ -1361,7 +1331,7 @@ class _PurchaseOrderDetailsPageState extends State<PurchaseOrderDetailsPage> {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     final itemsPayload = <Map<String, dynamic>>[];
                     for (int i = 0; i < items.length; i++) {
                       itemsPayload.add({
@@ -1370,10 +1340,21 @@ class _PurchaseOrderDetailsPageState extends State<PurchaseOrderDetailsPage> {
                       });
                     }
 
-                    context.read<OrderBloc>().add(
-                      OrderApproved(orderId: orderId, items: itemsPayload),
-                    );
+                    final bloc = context.read<OrderBloc>();
                     Navigator.of(dContext).pop();
+                    final signature = await showSignatureDialog(
+                      context,
+                      title: 'Sign to approve',
+                      confirmLabel: 'Approve',
+                    );
+                    if (signature == null) return;
+                    bloc.add(
+                      OrderApproved(
+                        orderId: orderId,
+                        items: itemsPayload,
+                        signature: signature,
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.green,

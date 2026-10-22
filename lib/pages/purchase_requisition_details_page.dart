@@ -8,6 +8,9 @@ import 'package:gspro/bloc/requisition/requisition_bloc.dart';
 import 'package:gspro/bloc/requisition/requisition_event.dart';
 import 'package:gspro/bloc/requisition/requisition_state.dart';
 import 'package:gspro/models/attachment.dart';
+import 'package:gspro/utils/attachment_actions.dart';
+import 'package:gspro/widgets/signature_dialog.dart';
+import 'package:gspro/widgets/signature_thumbnail.dart';
 import 'package:gspro/models/detailed_requisition.dart';
 import 'package:gspro/models/item.dart';
 import 'package:gspro/models/project.dart';
@@ -16,8 +19,6 @@ import 'package:gspro/repositories/project_repository.dart';
 import 'package:gspro/services/api_service.dart';
 import 'package:gspro/theme/app_colors.dart';
 import 'package:material_symbols_icons/symbols.dart';
-import 'package:file_saver/file_saver.dart';
-import 'package:http/http.dart' as http;
 
 class PurchaseRequisitionDetailsPage extends StatefulWidget {
   final String? requisitionNumber;
@@ -520,9 +521,20 @@ class _PurchaseRequisitionDetailsPageState
                               label: 'Reject',
                               icon: Symbols.cancel,
                               color: AppColors.red,
-                              onTap: () {
-                                context.read<RequisitionBloc>().add(
-                                  RequisitionRejected(requisitionId: header.id),
+                              onTap: () async {
+                                final bloc = context.read<RequisitionBloc>();
+                                final signature = await showSignatureDialog(
+                                  context,
+                                  title: 'Sign to reject',
+                                  confirmLabel: 'Reject',
+                                  confirmColor: AppColors.red,
+                                );
+                                if (signature == null) return;
+                                bloc.add(
+                                  RequisitionRejected(
+                                    requisitionId: header.id,
+                                    signature: signature,
+                                  ),
                                 );
                               },
                             ),
@@ -823,64 +835,16 @@ class _PurchaseRequisitionDetailsPageState
                 ),
               ),
               IconButton(
+                icon: const Icon(Symbols.visibility),
+                color: AppColors.alizarinCrimson,
+                tooltip: 'Preview',
+                onPressed: () => previewAttachment(context, doc),
+              ),
+              IconButton(
                 icon: const Icon(Symbols.download),
                 color: AppColors.alizarinCrimson,
-                onPressed: () async {
-                  if (doc.presignedUrl != null &&
-                      doc.presignedUrl!.isNotEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Downloading ${doc.name}...')),
-                    );
-                    try {
-                      final uri = Uri.parse(doc.presignedUrl!);
-                      final response = await http.get(uri);
-                      if (response.statusCode == 200) {
-                        final ext = doc.name.contains('.') ? doc.name.split('.').last : '';
-                        final nameWithoutExt = doc.name.contains('.')
-                            ? doc.name.substring(0, doc.name.lastIndexOf('.'))
-                            : doc.name;
-
-                        final savedPath = await FileSaver.instance.saveAs(
-                          name: nameWithoutExt,
-                          bytes: response.bodyBytes,
-                          ext: ext,
-                          mimeType: MimeType.other,
-                          customMimeType: doc.mimeType,
-                        );
-
-                        if (context.mounted) {
-                          if (savedPath != null && savedPath.isNotEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Download complete')),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Download cancelled')),
-                            );
-                          }
-                        }
-                      } else {
-                        throw Exception('Failed to download: HTTP ${response.statusCode}');
-                      }
-                    } catch (e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Error: $e'),
-                          ),
-                        );
-                      }
-                    }
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Download link not available for ${doc.name}',
-                        ),
-                      ),
-                    );
-                  }
-                },
+                tooltip: 'Download',
+                onPressed: () => downloadAttachment(context, doc),
               ),
             ],
           ),
@@ -1000,6 +964,12 @@ class _PurchaseRequisitionDetailsPageState
                               color: AppColors.mono70,
                             ),
                           ),
+                          if (approval.signaturePresignedUrl != null) ...[
+                            const SizedBox(height: 6),
+                            SignatureThumbnail(
+                              url: approval.signaturePresignedUrl!,
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -1182,7 +1152,7 @@ class _PurchaseRequisitionDetailsPageState
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     var badIndex = -1;
                     for (int i = 0; i < approvedQuantities.length; i++) {
                       if (approvedQuantities[i] < 0 ||
@@ -1211,14 +1181,23 @@ class _PurchaseRequisitionDetailsPageState
                       });
                     }
 
-                    // Dispatch event
-                    context.read<RequisitionBloc>().add(
+                    // Close the quantity dialog, then collect the signature
+                    // before dispatching.
+                    final bloc = context.read<RequisitionBloc>();
+                    Navigator.of(dContext).pop();
+                    final signature = await showSignatureDialog(
+                      context,
+                      title: 'Sign to approve',
+                      confirmLabel: 'Approve',
+                    );
+                    if (signature == null) return;
+                    bloc.add(
                       RequisitionApproved(
                         requisitionId: requisitionId,
                         items: itemsPayload,
+                        signature: signature,
                       ),
                     );
-                    Navigator.of(dContext).pop();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.green,

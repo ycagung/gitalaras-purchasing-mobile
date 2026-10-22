@@ -99,11 +99,12 @@ class OrderRepository {
   Future<Either<String, Order>> approveOrder({
     required String orderId,
     required List<Map<String, dynamic>> items,
+    required String signature,
   }) async {
     try {
       final response = await _apiService.post(
         '/order/approve',
-        body: {'orderId': orderId, 'items': items},
+        body: {'orderId': orderId, 'items': items, 'signature': signature},
       );
 
       if (response['data'] != null) {
@@ -138,11 +139,14 @@ class OrderRepository {
     }
   }
 
-  Future<Either<String, Order>> rejectOrder({required String orderId}) async {
+  Future<Either<String, Order>> rejectOrder({
+    required String orderId,
+    required String signature,
+  }) async {
     try {
       final response = await _apiService.post(
         '/order/reject',
-        body: {'orderId': orderId},
+        body: {'orderId': orderId, 'signature': signature},
       );
 
       if (response['data'] != null) {
