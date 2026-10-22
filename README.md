@@ -51,4 +51,6 @@ Each environment uses a different API base URL configured in `lib/config.dart`.
 
 ## Signing
 
-For production builds, you'll need to configure signing in `android/app/build.gradle.kts`. Currently, the release build uses debug signing for testing purposes.
+For production builds and release preparation, refer to the detailed [Android Signing & Play Store Guide](docs/ANDROID_SIGNING_GUIDE.md).
+Release signing is configured in `android/app/build.gradle.kts` and uses `android/key.properties` when present.
+
