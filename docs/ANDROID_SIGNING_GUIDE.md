@@ -92,14 +92,16 @@ android {
 
 Untuk membuat bundle yang siap diunggah ke Google Play Console:
 
+> **Wajib gunakan `--no-tree-shake-icons`.** Icon tree shaking Flutter merusak data variasi (fill/weight) pada font variabel Material Symbols, sehingga ikon yang memakai `fill:` atau `weight:` tampil salah.
+
 ### Staging
 ```bash
-fvm flutter build appbundle --release --dart-define=ENV=staging
+fvm flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=staging
 ```
 
 ### Production
 ```bash
-fvm flutter build appbundle --release --dart-define=ENV=production
+fvm flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=production
 ```
 
 ### Lokasi Output File:

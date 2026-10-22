@@ -13,13 +13,18 @@ This project uses environment-based configuration. You can build for different e
 flutter run --dart-define=ENV=dev
 ```
 
+> **Always pass `--no-tree-shake-icons` on release builds.** Flutter's icon
+> tree shaker corrupts the variation data (fill/weight) of the Material
+> Symbols variable fonts, so icons drawn with `fill:` or `weight:` render
+> wrong. Disabling it costs ~14MB of download size.
+
 ### Staging
 ```bash
 # Build APK
-flutter build apk --release --dart-define=ENV=staging
+flutter build apk --release --no-tree-shake-icons --dart-define=ENV=staging
 
 # Build App Bundle (for Play Store)
-flutter build appbundle --release --dart-define=ENV=staging
+flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=staging
 ```
 
 ### Production
@@ -27,13 +32,13 @@ flutter build appbundle --release --dart-define=ENV=staging
 
 ```bash
 # Build APK
-flutter build apk --release --dart-define=ENV=production
+flutter build apk --release --no-tree-shake-icons --dart-define=ENV=production
 
 # Build App Bundle (for Play Store)
-flutter build appbundle --release --dart-define=ENV=production
+flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=production
 
 # Build split APKs by ABI (smaller file size)
-flutter build apk --split-per-abi --release --dart-define=ENV=production
+flutter build apk --split-per-abi --release --no-tree-shake-icons --dart-define=ENV=production
 ```
 
 The output files will be located at:
