@@ -53,3 +53,15 @@ class OrderRejected extends OrderEvent {
   @override
   List<Object?> get props => [orderId, signature];
 }
+
+class OrderChecked extends OrderEvent {
+  final String orderId;
+
+  /// Base64-encoded PNG of the checker's drawn signature.
+  final String signature;
+
+  const OrderChecked({required this.orderId, required this.signature});
+
+  @override
+  List<Object?> get props => [orderId, signature];
+}

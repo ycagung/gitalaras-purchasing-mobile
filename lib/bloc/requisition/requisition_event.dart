@@ -56,3 +56,15 @@ class RequisitionRejected extends RequisitionEvent {
   @override
   List<Object?> get props => [requisitionId, signature];
 }
+
+class RequisitionChecked extends RequisitionEvent {
+  final String requisitionId;
+
+  /// Base64-encoded PNG of the checker's drawn signature.
+  final String signature;
+
+  const RequisitionChecked({required this.requisitionId, required this.signature});
+
+  @override
+  List<Object?> get props => [requisitionId, signature];
+}

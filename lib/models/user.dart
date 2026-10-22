@@ -15,6 +15,11 @@ class User extends Equatable {
   final int? approvalScore;
   final String? roleId;
 
+  /// What the user may do on PRs / POs: 'approver' (approve or reject),
+  /// 'checker' (check only, adds no score) or null (no action).
+  final String? prApprovalRole;
+  final String? poApprovalRole;
+
   const User({
     required this.id,
     this.oldId,
@@ -29,6 +34,8 @@ class User extends Equatable {
     this.departmentId,
     this.approvalScore,
     this.roleId,
+    this.prApprovalRole,
+    this.poApprovalRole,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -61,6 +68,10 @@ class User extends Equatable {
       approvalScore: json['approval_score'] as int? ??
           json['approvalScore'] as int?,
       roleId: json['role_id'] as String? ?? json['roleId'] as String?,
+      prApprovalRole: json['pr_approval_role'] as String? ??
+          json['prApprovalRole'] as String?,
+      poApprovalRole: json['po_approval_role'] as String? ??
+          json['poApprovalRole'] as String?,
     );
   }
 
@@ -79,6 +90,8 @@ class User extends Equatable {
       'department_id': departmentId,
       'approval_score': approvalScore,
       'role_id': roleId,
+      'pr_approval_role': prApprovalRole,
+      'po_approval_role': poApprovalRole,
     };
   }
 
@@ -96,6 +109,8 @@ class User extends Equatable {
     String? departmentId,
     int? approvalScore,
     String? roleId,
+    String? prApprovalRole,
+    String? poApprovalRole,
   }) {
     return User(
       id: id ?? this.id,
@@ -111,6 +126,8 @@ class User extends Equatable {
       departmentId: departmentId ?? this.departmentId,
       approvalScore: approvalScore ?? this.approvalScore,
       roleId: roleId ?? this.roleId,
+      prApprovalRole: prApprovalRole ?? this.prApprovalRole,
+      poApprovalRole: poApprovalRole ?? this.poApprovalRole,
     );
   }
 
@@ -129,6 +146,8 @@ class User extends Equatable {
         departmentId,
         approvalScore,
         roleId,
+        prApprovalRole,
+        poApprovalRole,
       ];
 }
 
