@@ -44,8 +44,8 @@ Konfigurasi kredensial disimpan pada file `android/key.properties` (file ini oto
 ```properties
 storePassword=[Password Keystore]
 keyPassword=[Password Keystore]
-keyAlias=gspro
-storeFile=gspro-keystore.jks
+keyAlias=upload
+storeFile=gspro-upload-2026.jks
 ```
 
 ---
@@ -68,7 +68,27 @@ android {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String?
                 keyPassword = keystoreProperties["keyPassword"] as String?
-                storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+                val storeFilePath = keystoreProperties["storeFile"] as String?
+                storeFile = if (storeFilePath != null) {
+                    val fileName = java.io.File(storeFilePath).name
+                    val localFile = file(storeFilePath)
+                    val localByName = file(fileName)
+                    val localJks = file("$storeFilePath.jks")
+                    val rootFile = rootProject.file(storeFilePath)
+                    val rootByName = rootProject.file("app/$fileName")
+                    val rootJks = rootProject.file("$storeFilePath.jks")
+                    when {
+                        localFile.exists() -> localFile
+                        localByName.exists() -> localByName
+                        localJks.exists() -> localJks
+                        rootFile.exists() -> rootFile
+                        rootByName.exists() -> rootByName
+                        rootJks.exists() -> rootJks
+                        else -> localFile
+                    }
+                } else {
+                    null
+                }
                 storePassword = keystoreProperties["storePassword"] as String?
             }
         }
@@ -76,6 +96,12 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
@@ -86,20 +112,39 @@ android {
 }
 ```
 
+Aturan ProGuard/R8 untuk proteksi bytecode native dan plugin terdaftar di [`android/app/proguard-rules.pro`](../android/app/proguard-rules.pro).
+
 ---
 
 ## 4. Build Release Android App Bundle (.aab)
 
-Untuk membuat bundle yang siap diunggah ke Google Play Console:
+### Cara Cepat (Menggunakan Skrip Otomatisasi)
 
-### Staging
+Gunakan skrip yang telah disiapkan di root project:
+
 ```bash
-fvm flutter build appbundle --release --dart-define=ENV=staging
+# Build Production standar
+./scripts/build_aab.sh
+
+# Build Production dengan Obfuscation kode Dart (Direkomendasikan)
+./scripts/build_aab.sh --obfuscate
+
+# Build Staging
+./scripts/build_aab.sh --staging
 ```
 
-### Production
+### Cara Manual (Flutter CLI)
+
 ```bash
+# Staging
+fvm flutter build appbundle --release --dart-define=ENV=staging
+
+# Production
 fvm flutter build appbundle --release --dart-define=ENV=production
+
+# Production dengan Obfuscation
+fvm flutter build appbundle --release --dart-define=ENV=production \
+  --obfuscate --split-debug-info=build/app/outputs/symbols
 ```
 
 ### Lokasi Output File:
@@ -108,3 +153,4 @@ build/app/outputs/bundle/release/app-release.aab
 ```
 
 File `app-release.aab` inilah yang diunggah ke Google Play Console pada track **Internal Testing**, **Closed Testing**, atau **Production**.
+Jika mengaktifkan `--obfuscate`, berkas simbol debug disimpan di folder `build/app/outputs/symbols` untuk memetakan stack trace saat debugging.

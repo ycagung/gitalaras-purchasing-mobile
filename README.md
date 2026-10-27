@@ -36,6 +36,23 @@ flutter build appbundle --release --dart-define=ENV=production
 flutter build apk --split-per-abi --release --dart-define=ENV=production
 ```
 
+### Run Direct to Device in Release Mode (Signed with Keystore)
+Karena `android/key.properties` sudah ada, perintah `flutter run --release` akan otomatis meng-compile APK dengan signature release keystore dan langsung menginstalnya ke HP/device yang terhubung:
+
+```bash
+# Production Release
+fvm flutter run --release --dart-define=ENV=production
+
+# Staging Release
+fvm flutter run --release --dart-define=ENV=staging
+
+# Jika ada beberapa device, tentukan target device:
+fvm flutter run --release -d <device_id> --dart-define=ENV=production
+```
+
+> **Catatan:** Jika sebelumnya di HP sudah terpasang versi **debug**, pastikan untuk **uninstall aplikasi lama terlebih dahulu** dari HP karena Android menolak update jika signature berbeda (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+
+
 The output files will be located at:
 - APK: `build/app/outputs/flutter-apk/app-release.apk`
 - App Bundle: `build/app/outputs/bundle/release/app-release.aab`
