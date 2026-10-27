@@ -44,7 +44,8 @@ class Config {
       case Environment.production:
         return const Config(
           environment: Environment.production,
-          apiBaseUrl: '', // TODO: Set production API base URL
+          apiBaseUrl:
+              'https://api.gspro.seavihive.com', // TODO: Set production API base URL
         );
     }
   }
