@@ -1,3 +1,4 @@
+import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
@@ -46,7 +47,27 @@ android {
             create("release") {
                 keyAlias = keystoreProperties["keyAlias"] as String?
                 keyPassword = keystoreProperties["keyPassword"] as String?
-                storeFile = keystoreProperties["storeFile"]?.let { file(it) }
+                val storeFilePath = keystoreProperties["storeFile"] as String?
+                storeFile = if (storeFilePath != null) {
+                    val fileName = File(storeFilePath).name
+                    val localFile = file(storeFilePath)
+                    val localByName = file(fileName)
+                    val localJks = file("$storeFilePath.jks")
+                    val rootFile = rootProject.file(storeFilePath)
+                    val rootByName = rootProject.file("app/$fileName")
+                    val rootJks = rootProject.file("$storeFilePath.jks")
+                    when {
+                        localFile.exists() -> localFile
+                        localByName.exists() -> localByName
+                        localJks.exists() -> localJks
+                        rootFile.exists() -> rootFile
+                        rootByName.exists() -> rootByName
+                        rootJks.exists() -> rootJks
+                        else -> localFile
+                    }
+                } else {
+                    null
+                }
                 storePassword = keystoreProperties["storePassword"] as String?
             }
         }
@@ -54,6 +75,12 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
