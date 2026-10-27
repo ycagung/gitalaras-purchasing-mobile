@@ -13,13 +13,18 @@ This project uses environment-based configuration. You can build for different e
 flutter run --dart-define=ENV=dev
 ```
 
+> **Always pass `--no-tree-shake-icons` on release builds.** Flutter's icon
+> tree shaker corrupts the variation data (fill/weight) of the Material
+> Symbols variable fonts, so icons drawn with `fill:` or `weight:` render
+> wrong. Disabling it costs ~14MB of download size.
+
 ### Staging
 ```bash
 # Build APK
-flutter build apk --release --dart-define=ENV=staging
+flutter build apk --release --no-tree-shake-icons --dart-define=ENV=staging
 
 # Build App Bundle (for Play Store)
-flutter build appbundle --release --dart-define=ENV=staging
+flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=staging
 ```
 
 ### Production
@@ -27,13 +32,13 @@ flutter build appbundle --release --dart-define=ENV=staging
 
 ```bash
 # Build APK
-flutter build apk --release --dart-define=ENV=production
+flutter build apk --release --no-tree-shake-icons --dart-define=ENV=production
 
 # Build App Bundle (for Play Store)
-flutter build appbundle --release --dart-define=ENV=production
+flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=production
 
 # Build split APKs by ABI (smaller file size)
-flutter build apk --split-per-abi --release --dart-define=ENV=production
+flutter build apk --split-per-abi --release --no-tree-shake-icons --dart-define=ENV=production
 ```
 
 ### Run Direct to Device in Release Mode (Signed with Keystore)
@@ -41,13 +46,13 @@ Karena `android/key.properties` sudah ada, perintah `flutter run --release` akan
 
 ```bash
 # Production Release
-fvm flutter run --release --dart-define=ENV=production
+fvm flutter run --release --no-tree-shake-icons --dart-define=ENV=production
 
 # Staging Release
-fvm flutter run --release --dart-define=ENV=staging
+fvm flutter run --release --no-tree-shake-icons --dart-define=ENV=staging
 
 # Jika ada beberapa device, tentukan target device:
-fvm flutter run --release -d <device_id> --dart-define=ENV=production
+fvm flutter run --release --no-tree-shake-icons -d <device_id> --dart-define=ENV=production
 ```
 
 > **Catatan:** Jika sebelumnya di HP sudah terpasang versi **debug**, pastikan untuk **uninstall aplikasi lama terlebih dahulu** dari HP karena Android menolak update jika signature berbeda (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).

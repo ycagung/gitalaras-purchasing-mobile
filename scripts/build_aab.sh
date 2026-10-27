@@ -141,6 +141,7 @@ if [ "$DO_OBFUSCATE" = true ]; then
 else
   echo -e "• Obfuscation:  ${YELLOW}Disabled${NC} (Pass --obfuscate to enable Dart symbol obfuscation)"
 fi
+echo -e "• Icons:        ${GREEN}Preserved (--no-tree-shake-icons for Material Symbols)${NC}"
 
 echo ""
 START_TIME=$(date +%s)
@@ -158,10 +159,10 @@ $FLUTTER_CMD pub get
 # Step C: Build AppBundle
 echo ""
 echo -e "${CYAN}${BOLD}🔨 Compiling Android App Bundle (AAB)...${NC}"
-echo -e "Command: ${BOLD}$FLUTTER_CMD build appbundle --release -t lib/main.dart --dart-define=ENV=$ENV_NAME ${EXTRA_ARGS[*]}${NC}"
+echo -e "Command: ${BOLD}$FLUTTER_CMD build appbundle --release --no-tree-shake-icons -t lib/main.dart --dart-define=ENV=$ENV_NAME ${EXTRA_ARGS[*]}${NC}"
 echo ""
 
-$FLUTTER_CMD build appbundle --release -t lib/main.dart --dart-define=ENV="$ENV_NAME" "${EXTRA_ARGS[@]}"
+$FLUTTER_CMD build appbundle --release --no-tree-shake-icons -t lib/main.dart --dart-define=ENV="$ENV_NAME" "${EXTRA_ARGS[@]}"
 
 AAB_OUTPUT="build/app/outputs/bundle/release/app-release.aab"
 

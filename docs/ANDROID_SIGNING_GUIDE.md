@@ -135,15 +135,18 @@ Gunakan skrip yang telah disiapkan di root project:
 
 ### Cara Manual (Flutter CLI)
 
+> [!IMPORTANT]
+> **Wajib gunakan `--no-tree-shake-icons`.** Icon tree shaking Flutter merusak data variasi (fill/weight) pada font variabel Material Symbols, sehingga ikon yang memakai `fill:` atau `weight:` tampil salah/hilang. Skrip `./scripts/build_aab.sh` sudah otomatis menyertakan flag ini.
+
 ```bash
 # Staging
-fvm flutter build appbundle --release --dart-define=ENV=staging
+fvm flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=staging
 
 # Production
-fvm flutter build appbundle --release --dart-define=ENV=production
+fvm flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=production
 
 # Production dengan Obfuscation
-fvm flutter build appbundle --release --dart-define=ENV=production \
+fvm flutter build appbundle --release --no-tree-shake-icons --dart-define=ENV=production \
   --obfuscate --split-debug-info=build/app/outputs/symbols
 ```
 
