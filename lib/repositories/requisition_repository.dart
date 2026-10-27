@@ -1,5 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:gspro/models/detailed_requisition.dart';
+import 'package:gspro/models/attachment.dart';
 import 'package:gspro/models/requisition.dart';
 import 'package:gspro/services/api_service.dart';
 
@@ -71,6 +72,34 @@ class RequisitionRepository {
       } else {
         return Left(
           response['message'] as String? ?? 'Failed to get requisition',
+        );
+      }
+    } catch (e) {
+      return Left(e.toString());
+    }
+  }
+
+  Future<Either<String, List<Attachment>>> getRequisitionAttachments(
+    String requisitionId,
+  ) async {
+    try {
+      final response = await _apiService.get(
+        '/requisition/$requisitionId/attachments',
+      );
+
+      if (response['data'] != null) {
+        final data = response['data'];
+        if (data is List) {
+          final attachments = data
+              .map((json) => Attachment.fromJson(json as Map<String, dynamic>))
+              .toList();
+          return Right(attachments);
+        } else {
+          return Left('Invalid data format: expected List');
+        }
+      } else {
+        return Left(
+          response['message'] as String? ?? 'Failed to get attachments',
         );
       }
     } catch (e) {

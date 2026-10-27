@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:gspro/models/attachment.dart';
 import 'package:gspro/models/detailed_requisition.dart';
 import 'package:gspro/models/requisition.dart';
 import 'package:gspro/models/requisition_status.dart';
@@ -29,13 +30,15 @@ class RequisitionsLoadedState extends RequisitionState {
 
 class RequisitionLoadedState extends RequisitionState {
   final DetailedRequisition detailedRequisition;
+  final List<Attachment> attachments;
 
   const RequisitionLoadedState({
     required this.detailedRequisition,
+    this.attachments = const [],
   });
 
   @override
-  List<Object?> get props => [detailedRequisition];
+  List<Object?> get props => [detailedRequisition, attachments];
 }
 
 class RequisitionStatusesLoadedState extends RequisitionState {

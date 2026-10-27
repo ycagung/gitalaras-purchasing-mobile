@@ -25,24 +25,24 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
 
   // Status mapping — adjust based on actual status IDs
   final Map<int, String> _statusMap = {
-    1: 'Draft',
-    2: 'Waiting Approval',
-    3: 'Approved',
-    4: 'Rejected',
+    4: 'Draft',
+    1: 'Waiting Approval',
+    2: 'Approved',
+    3: 'Rejected',
   };
 
   final Map<int, Color> _statusColorMap = {
-    1: AppColors.mono70, // Draft
-    2: AppColors.yellow, // Waiting Approval
-    3: AppColors.green, // Approved
-    4: AppColors.red, // Rejected
+    4: AppColors.mono70, // Draft
+    1: AppColors.yellow, // Waiting Approval
+    2: AppColors.green, // Approved
+    3: AppColors.red, // Rejected
   };
 
   final Map<int, Color> _statusBackgroundColorMap = {
-    1: AppColors.mono10, // Draft
-    2: AppColors.lightYellow, // Waiting Approval
-    3: AppColors.lightGreen, // Approved
-    4: AppColors.lightRed, // Rejected
+    4: AppColors.mono10, // Draft
+    1: AppColors.lightYellow, // Waiting Approval
+    2: AppColors.lightGreen, // Approved
+    3: AppColors.lightRed, // Rejected
   };
 
   String _getStatusName(int statusId) {
@@ -235,17 +235,17 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildStatusChip('Draft', '1', _selectedStatus == '1'),
+                  _buildStatusChip('Draft', '4', _selectedStatus == '4'),
                   const SizedBox(width: 8),
                   _buildStatusChip(
                     'Waiting Approval',
-                    '2',
-                    _selectedStatus == '2',
+                    '1',
+                    _selectedStatus == '1',
                   ),
                   const SizedBox(width: 8),
-                  _buildStatusChip('Approved', '3', _selectedStatus == '3'),
+                  _buildStatusChip('Approved', '2', _selectedStatus == '2'),
                   const SizedBox(width: 8),
-                  _buildStatusChip('Rejected', '4', _selectedStatus == '4'),
+                  _buildStatusChip('Rejected', '3', _selectedStatus == '3'),
                 ],
               ),
             ),
@@ -337,7 +337,7 @@ class _PurchaseOrderListPageState extends State<PurchaseOrderListPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Requisition: ${order.requisitionId ?? "-"}',
+                      'Requisition: ${order.requisitionNumber ?? "-"}',
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         color: AppColors.mono70,

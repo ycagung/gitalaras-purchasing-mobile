@@ -4,6 +4,7 @@ class Order extends Equatable {
   final String id;
   final DateTime? createdAt;
   final String? createdBy;
+  final String? requisitionNumber;
   final String? requisitionId;
   final String number;
   final String issuerId;
@@ -20,6 +21,7 @@ class Order extends Equatable {
     required this.id,
     this.createdAt,
     this.createdBy,
+    this.requisitionNumber,
     this.requisitionId,
     required this.number,
     required this.issuerId,
@@ -36,25 +38,26 @@ class Order extends Equatable {
   factory Order.fromJson(Map<String, dynamic> json) {
     return Order(
       id: json['id']?.toString() ?? '',
-      createdAt: json['created_at'] != null
-          ? DateTime.tryParse(json['created_at'].toString())
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString())
           : null,
-      createdBy: json['created_by']?.toString(),
-      requisitionId: json['requisition_id']?.toString(),
+      createdBy: json['createdBy']?.toString(),
+      requisitionNumber: json['requisitionNumber']?.toString(),
+      requisitionId: json['requisitionId']?.toString(),
       number: json['number']?.toString() ?? '',
-      issuerId: json['issuer_id']?.toString() ?? '',
-      issueDate: json['issue_date']?.toString() ?? '',
-      supplierId: json['supplier_id']?.toString() ?? '',
-      paymentTermId: json['payment_term_id']?.toString(),
-      deliveryTerm: json['delivery_term']?.toString(),
-      deliveryDate: json['delivery_date']?.toString(),
-      deliveryPointId: json['delivery_point_id'] is int
-          ? json['delivery_point_id']
-          : int.tryParse(json['delivery_point_id']?.toString() ?? ''),
+      issuerId: json['issuerId']?.toString() ?? '',
+      issueDate: json['issueDate']?.toString() ?? '',
+      supplierId: json['supplierId']?.toString() ?? '',
+      paymentTermId: json['paymentTermId']?.toString(),
+      deliveryTerm: json['deliveryTerm']?.toString(),
+      deliveryDate: json['deliveryDate']?.toString(),
+      deliveryPointId: json['deliveryPointId'] is int
+          ? json['deliveryPointId']
+          : int.tryParse(json['deliveryPointId']?.toString() ?? ''),
       remarks: json['remarks']?.toString(),
-      statusId: json['status_id'] is int
-          ? json['status_id']
-          : int.tryParse(json['status_id']?.toString() ?? '') ?? 1,
+      statusId: json['statusId'] is int
+          ? json['statusId']
+          : int.tryParse(json['statusId']?.toString() ?? '') ?? 1,
     );
   }
 
@@ -63,6 +66,7 @@ class Order extends Equatable {
       'id': id,
       'created_at': createdAt?.toIso8601String(),
       'created_by': createdBy,
+      'requisition_number': requisitionNumber,
       'requisition_id': requisitionId,
       'number': number,
       'issuer_id': issuerId,
@@ -82,6 +86,7 @@ class Order extends Equatable {
     id,
     createdAt,
     createdBy,
+    requisitionNumber,
     requisitionId,
     number,
     issuerId,
