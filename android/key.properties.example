@@ -1,0 +1,10 @@
+# ==============================================================================
+# Android Upload Keystore Configuration Template (GS PRO)
+# Copy this file to android/key.properties and replace with actual credentials.
+# IMPORTANT: Never commit android/key.properties into Git!
+# ==============================================================================
+
+storePassword=your_keystore_password
+keyPassword=your_key_password
+keyAlias=upload
+storeFile=gspro-upload-2026.jks

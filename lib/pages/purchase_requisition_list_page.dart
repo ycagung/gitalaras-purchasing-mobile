@@ -21,6 +21,9 @@ class _PurchaseRequisitionListPageState
     extends State<PurchaseRequisitionListPage> {
   final TextEditingController _searchController = TextEditingController();
   String? _selectedStatus;
+  // Local copy of the list: RequisitionBloc is app-wide and its state is
+  // replaced when a details page loads, so filters can't read from it.
+  List<Requisition> _allRequisitions = [];
   List<Requisition> _filteredRequisitions = [];
   bool _hasLoadedOnce = false;
 
@@ -29,21 +32,18 @@ class _PurchaseRequisitionListPageState
     1: 'Awaiting approval',
     2: 'Approved',
     3: 'Rejected',
-    4: 'PO created',
   };
 
   final Map<int, Color> _statusColorMap = {
     1: AppColors.yellow, // Awaiting approval
     2: AppColors.green, // Approved
     3: AppColors.red, // Rejected
-    4: AppColors.infoBlue, // PO created
   };
 
   final Map<int, Color> _statusBackgroundColorMap = {
     1: AppColors.lightYellow, // Awaiting approval
     2: AppColors.lightGreen, // Approved
     3: AppColors.lightRed, // Rejected
-    4: AppColors.lightBlue, // PO created
   };
 
   String _getStatusName(int statusId) {
@@ -86,13 +86,23 @@ class _PurchaseRequisitionListPageState
     return _statusBackgroundColorMap[statusId] ?? AppColors.mono10;
   }
 
-  void _filterRequisitions(List<Requisition> requisitions) {
+  // Lowercase and drop separators so "0519", "2605/0519" and "26050519"
+  // all match "PR/2605/0519".
+  String _normalize(String value) =>
+      value.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+  void _setRequisitions(List<Requisition> requisitions) {
+    _allRequisitions = requisitions;
+    _filterRequisitions();
+  }
+
+  void _filterRequisitions() {
+    final searchText = _normalize(_searchController.text);
     setState(() {
-      _filteredRequisitions = requisitions.where((req) {
+      _filteredRequisitions = _allRequisitions.where((req) {
         // Search filter
-        final searchText = _searchController.text.toLowerCase();
         final matchesSearch =
-            searchText.isEmpty || req.number.toLowerCase().contains(searchText);
+            searchText.isEmpty || _normalize(req.number).contains(searchText);
 
         // Status filter
         final matchesStatus =
@@ -110,17 +120,12 @@ class _PurchaseRequisitionListPageState
     // Check if data is already loaded
     final currentState = context.read<RequisitionBloc>().state;
     if (currentState is RequisitionsLoadedState) {
-      _filterRequisitions(currentState.requisitions);
+      _setRequisitions(currentState.requisitions);
       _hasLoadedOnce = true;
     } else {
       context.read<RequisitionBloc>().add(const RequisitionsLoaded());
     }
-    _searchController.addListener(() {
-      final state = context.read<RequisitionBloc>().state;
-      if (state is RequisitionsLoadedState) {
-        _filterRequisitions(state.requisitions);
-      }
-    });
+    _searchController.addListener(_filterRequisitions);
   }
 
   @override
@@ -190,13 +195,8 @@ class _PurchaseRequisitionListPageState
   Widget _buildStatusChip(String label, String? statusId, bool isSelected) {
     return GestureDetector(
       onTap: () {
-        setState(() {
-          _selectedStatus = isSelected ? null : statusId;
-        });
-        final state = context.read<RequisitionBloc>().state;
-        if (state is RequisitionsLoadedState) {
-          _filterRequisitions(state.requisitions);
-        }
+        _selectedStatus = isSelected ? null : statusId;
+        _filterRequisitions();
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -241,8 +241,6 @@ class _PurchaseRequisitionListPageState
                   _buildStatusChip('Approved', '2', _selectedStatus == '2'),
                   const SizedBox(width: 8),
                   _buildStatusChip('Rejected', '3', _selectedStatus == '3'),
-                  const SizedBox(width: 8),
-                  _buildStatusChip('PO created', '4', _selectedStatus == '4'),
                 ],
               ),
             ),
@@ -435,7 +433,7 @@ class _PurchaseRequisitionListPageState
               child: BlocConsumer<RequisitionBloc, RequisitionState>(
                 listener: (context, state) {
                   if (state is RequisitionsLoadedState) {
-                    _filterRequisitions(state.requisitions);
+                    _setRequisitions(state.requisitions);
                     _hasLoadedOnce = true;
                   } else if (state is RequisitionError) {
                     ScaffoldMessenger.of(context).showSnackBar(
